@@ -5,7 +5,7 @@ use std::path::Path;
 use crate::display::Display;
 
 const START_PC: u16 = 0x200;
-const FONT: [u8;80] = 
+const FONT: [u8;80] =
     [0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
     0x20, 0x60, 0x20, 0x20, 0x70, // 1
     0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
@@ -21,7 +21,7 @@ const FONT: [u8;80] =
     0xF0, 0x80, 0x80, 0x80, 0xF0, // C
     0xE0, 0x90, 0x90, 0x90, 0xE0, // D
     0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
-    0xF0, 0x80, 0xF0, 0x80, 0x80];  // F 
+    0xF0, 0x80, 0xF0, 0x80, 0x80];  // F
 
 pub struct Cpu {
     pub register: [u8;16],
@@ -78,33 +78,82 @@ impl Cpu {
         let nn = (opcode & 0x00FF) as u8;
         let nnn = opcode & 0x0FFF;
         let n = opcode & 0x000F;
+        let vx = self.register[x];
+        let vy = self.register[y];
 
         let op_1 = (opcode & 0xF000) >> 12;
         let op_2 = (opcode & 0x0F00) >> 8;
         let op_3 = (opcode & 0x00F0) >> 4;
         let op_4 = opcode & 0x000F;
 
-        match (op_1,op_2,op_3,op_4) {
-            (0x0,_,_,_) => match (op_3,op_4) {
+        match op_1 {
+            0x0 => match (op_3,op_4) {
                 (0xE,0x0) => self.display.clear(), //clear screen
                 (0xE,0xE) => self.pc = self.pop(), //return
                 _ => panic!("Unsupported instruction"), //SYS
             }
-            (0x1,_,_,_) => self.pc = nnn, //jump
-            (0x2,_,_,_) => {
+            0x1 => self.pc = nnn, //jump
+            0x2 => {
                 self.push(self.pc);
                 self.pc = nnn;
             },
-            (0x3,0,0,0) => (),
-            (0x4,0,0,0) => (),
-            (0x5,0,0,0) => (),
-            (0x6,_,_,_) => self.register[x] = nn, //set register
-            (0x7,_,_,_) => self.register[x] += nn, //add to register
-            (0x8,0,0,0) => (),
-            (0xA,_,_,_) => self.index = nnn,
-            (0xD,_,_,_) => { 
-                let vf = self.display.draw(self.register[x] as usize, self.register[y] as usize, &self.memory[self.index as usize..(self.index + n) as usize]); 
-                self.register[0xF as usize] = vf as u8;
+            0x3 => if vx == nn {
+                self.pc += 2;
+            },
+            0x4 => if vx != nn {
+                self.pc += 2;
+            },
+            0x5 => if vx == vy {
+                self.pc += 2;
+            },
+            0x9 => if vx != vy {
+                self.pc += 2;
+            },
+            0x6 => self.register[x] = nn, //set register
+            0x7 => self.register[x] = vx.wrapping_add(nn), //add to register
+            0x8 => match op_4 {
+                0x0 => self.register[x] = vy,
+                0x1 => self.register[x] = vx | vy,
+                0x2 => self.register[x] = vx & vy,
+                0x3 => self.register[x] = vx ^ vy,
+                0x4 => {
+                    let (res,ovf) = vx.overflowing_add(vy);
+                    self.register[x] = res;
+                    self.register[0xF] = ovf as u8;
+                }
+                0x5 => {
+                    self.register[x] = vx.wrapping_sub(vy);
+                    self.register[0xF] = (vx >= vy) as u8;
+                }
+                0x6 => {
+                    self.register[0xF] = vx & 0x1;
+                    self.register[x] >>= 1;
+                }
+                0x7 => {
+                    self.register[x] = vy.wrapping_sub(vx);
+                    self.register[0xF] = (vy >= vx) as u8;
+                }
+                0xE => {
+                    self.register[0xF] = vx & 0x80;
+                    self.register[x] <<= 1;
+                },
+                _ => panic!("Unsupported instruction"),
+            },
+            0xA => self.index = nnn,
+            0xB => self.pc = nnn + self.register[0] as u16,
+            0xC => unimplemented!("No random for now"),
+            0xE => match (op_3,op_4) {
+                (0x9,0xE) => unimplemented!("Keyboard instructions"),
+                (0xA,0x1) => unimplemented!("Keyboard instructions"),
+                _ => panic!("Unsupported instruction"),
+            }
+            0xF => match (op_3, op_4) {
+                (0x2,0x9) => self.index = (vx & 0xF) as u16 * 5,
+                _ => unimplemented!("Keyboard and random not yet implemented"),
+            }
+            0xD => {
+                let vf = self.display.draw(vx as usize, vy as usize, &self.memory[self.index as usize..(self.index + n) as usize]);
+                self.register[0xF] = vf as u8;
             },
             _ => panic!("Unsupported instruction"),
         }
