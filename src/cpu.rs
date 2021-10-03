@@ -3,6 +3,7 @@ use std::io::prelude::*;
 use std::path::Path;
 
 use crate::display::Display;
+use crate::timer::Timer;
 
 const START_PC: u16 = 0x200;
 const FONT: [u8;80] =
@@ -29,8 +30,8 @@ pub struct Cpu {
     pub pc: u16,
     pub stack: [u16;16],
     pub sp: u8,
-    pub delay_timer: u8,
-    pub sound_timer: u8,
+    pub delay_timer: Timer,
+    pub sound_timer: Timer,
     pub memory: [u8;4096],
     pub display: Display,
 
@@ -44,8 +45,8 @@ impl Cpu {
             pc: 0,
             stack: [0;16],
             sp: 0,
-            delay_timer: 0,
-            sound_timer: 0,
+            delay_timer: Timer::new(),
+            sound_timer: Timer::new(),
             memory: [0;4096],
             display: Display::new(),
         }
@@ -57,8 +58,8 @@ impl Cpu {
         self.pc = START_PC;
         self.stack = [0;16];
         self.sp = 0;
-        self.delay_timer = 0;
-        self.sound_timer = 0;
+        self.delay_timer.reset();
+        self.sound_timer.reset();
         self.memory = [0;4096];
         for i in 0..FONT.len() {
             self.memory[i] = FONT[i];
@@ -69,6 +70,8 @@ impl Cpu {
     pub fn cycle(&mut self) -> () {
         let opcode: u16 = (self.memory[self.pc as usize] as u16) << 8 | self.memory[(self.pc + 1) as usize] as u16;
         self.pc += 2;
+        self.delay_timer.decrement();
+        self.sound_timer.decrement();
         self.execute(opcode);
     }
 
@@ -148,6 +151,9 @@ impl Cpu {
                 _ => panic!("Unsupported instruction"),
             }
             0xF => match (op_3, op_4) {
+                (0x0,0x7) => self.register[x] = self.delay_timer.timer,
+                (0x1,0x5) => self.delay_timer.timer = vx,
+                (0x1,0x8) => self.sound_timer.timer = vx,
                 (0x2,0x9) => self.index = (vx & 0xF) as u16 * 5,
                 _ => unimplemented!("Keyboard and random not yet implemented"),
             }
