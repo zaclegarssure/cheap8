@@ -182,6 +182,24 @@ impl Cpu {
                 (0x1,0x5) => self.delay_timer.timer = vx,
                 (0x1,0x8) => self.sound_timer.timer = vx,
                 (0x2,0x9) => self.index = (vx & 0xF) as u16 * 5,
+                (0x3,0x3) => {
+                    let digit1 = vx / 100;
+                    let digit2 = (vx % 100) / 10;
+                    let digit3 = vx % 10;
+                    self.memory[self.index as usize] = digit1;
+                    self.memory[(self.index+1) as usize] = digit2;
+                    self.memory[(self.index+2) as usize] = digit3;
+                }
+                (0x5,0x5) => {
+                    for i in 0..=x {
+                        self.memory[self.index as usize + i] = self.register[i];
+                    }
+                }
+                (0x6,0x5) => {
+                    for i in 0..=x {
+                        self.register[i] = self.memory[self.index as usize + i];
+                    }
+                }
                 _ => panic!("Unsupported instruction"),
             }
             0xD => {
