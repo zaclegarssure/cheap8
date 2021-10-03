@@ -182,8 +182,8 @@ impl Cpu {
                             self.register[x] = i as u8;
                             return;
                         }
-                        self.pc -= 2;
                     }
+                    self.pc -= 2;
                 }
                 (0x0,0x7) => self.register[x] = self.delay_timer.timer,
                 (0x1,0x5) => self.delay_timer.timer = vx,
