@@ -108,7 +108,7 @@ impl Cpu {
             0x0 => match (op_3,op_4) {
                 (0xE,0x0) => self.display.clear(), //clear screen
                 (0xE,0xE) => self.pc = self.pop(), //return
-                _ => panic!("Unsupported instruction"), //SYS
+                _ => panic!("Unsupported instruction {:#x}{:#x}{:#x}{:#x}",op_1,op_2,op_3,op_4),
             }
             0x1 => self.pc = nnn, //jump
             0x2 => {
@@ -155,7 +155,7 @@ impl Cpu {
                     self.register[0xF] = vx & 0x80;
                     self.register[x] <<= 1;
                 },
-                _ => panic!("Unsupported instruction"),
+                _ => panic!("Unsupported instruction {:#x}{:#x}{:#x}{:#x}",op_1,op_2,op_3,op_4),
             },
             0xA => self.index = nnn,
             0xB => self.pc = nnn + self.register[0] as u16,
@@ -166,7 +166,7 @@ impl Cpu {
             0xE => match (op_3,op_4) {
                 (0x9,0xE) => if key_pressed[vx as usize] { self.pc += 2; },
                 (0xA,0x1) => if !key_pressed[vx as usize] { self.pc += 2; },
-                _ => panic!("Unsupported instruction"),
+                _ => panic!("Unsupported instruction {:#x}{:#x}{:#x}{:#x}",op_1,op_2,op_3,op_4),
             }
             0xF => match (op_3, op_4) {
                 (0x0,0xA) => {
@@ -181,6 +181,7 @@ impl Cpu {
                 (0x0,0x7) => self.register[x] = self.delay_timer.timer,
                 (0x1,0x5) => self.delay_timer.timer = vx,
                 (0x1,0x8) => self.sound_timer.timer = vx,
+                (0x1,0xE) => self.index += vx as u16,
                 (0x2,0x9) => self.index = (vx & 0xF) as u16 * 5,
                 (0x3,0x3) => {
                     let digit1 = vx / 100;
@@ -200,13 +201,13 @@ impl Cpu {
                         self.register[i] = self.memory[self.index as usize + i];
                     }
                 }
-                _ => panic!("Unsupported instruction"),
+                _ => panic!("Unsupported instruction {:#x}{:#x}{:#x}{:#x}",op_1,op_2,op_3,op_4),
             }
             0xD => {
                 let vf = self.display.draw(vx as usize, vy as usize, &self.memory[self.index as usize..(self.index + n) as usize]);
                 self.register[0xF] = vf as u8;
             },
-            _ => panic!("Unsupported instruction"),
+            _ => panic!("Unsupported instruction {:#x}{:#x}{:#x}{:#x}",op_1,op_2,op_3,op_4),
         }
     }
 
