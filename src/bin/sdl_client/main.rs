@@ -9,13 +9,13 @@ use std::env;
 mod drivers;
 use drivers::DisplayDriver;
 
-use cheap8::Cpu;
+use cheap8::{Cpu,Output};
 
 pub fn main() {
     let sdl_context = sdl2::init().unwrap();
     let mut display_driver = DisplayDriver::new(&sdl_context);
     
-    let mut args: Vec<String> = env::args().collect();
+    let args: Vec<String> = env::args().collect();
     let mut cpu = Cpu::new();
     cpu.reset();
     cpu.load(&args[1]);
@@ -32,8 +32,10 @@ pub fn main() {
             }
         }
 
-        cpu.cycle();
-        display_driver.draw(&cpu.display.display);
+        let Output { screen, screen_update, beep: _ } = cpu.cycle(&[false;16]);
+        if screen_update {
+            display_driver.draw(screen);
+        }
 
         // The rest of the game loop goes here...
 
