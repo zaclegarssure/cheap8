@@ -15,24 +15,23 @@ impl InputDriver {
     }
 
     pub fn poll(&mut self) -> Option<[bool;16]> {
-        let mut key_pressed = [false;16];
         for event in self.event_pump.poll_iter() {
             match event {
                 Event::Quit{..} | Event::KeyDown {keycode: Some(Keycode::Escape), ..} => return None,
-                Event::KeyDown { scancode: Some(scancode), .. } => {
-                    match Keycode::from_scancode(scancode) {
-                        None => return None,
-                        Some(keycode) => {
-                            if let Some(index) = InputDriver::key_code_to_hex(keycode) {
-                                key_pressed[index] = true;
-                            }
-                        }
-                    }
-
-                },
                 _ => ()
             }
         }
+
+        let mut key_pressed = [false;16];
+
+        self.event_pump
+            .keyboard_state()
+            .pressed_scancodes()
+            .filter_map(Keycode::from_scancode)
+            .filter_map(Self::key_code_to_hex)
+            .for_each(|hex_key| key_pressed[hex_key] = true);
+
+
         Some(key_pressed)
     }
 
