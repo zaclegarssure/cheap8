@@ -1,6 +1,7 @@
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
+use rand::prelude::*;
 
 use crate::display::{Display,WIDTH,HEIGHT};
 use crate::timer::Timer;
@@ -40,7 +41,7 @@ pub struct Cpu {
     sound_timer: Timer,
     memory: [u8;4096],
     display: Display,
-
+    rng: ThreadRng,
 }
 
 impl Cpu {
@@ -55,6 +56,7 @@ impl Cpu {
             sound_timer: Timer::new(),
             memory: [0;4096],
             display: Display::new(),
+            rng: rand::thread_rng(),
         }
     }
 
@@ -71,6 +73,7 @@ impl Cpu {
             self.memory[i] = FONT[i];
         }
         self.display.clear();
+        self.rng = rand::thread_rng();
     }
 
     pub fn cycle(&mut self, key_pressed: &[bool;16]) -> Output {
@@ -156,7 +159,10 @@ impl Cpu {
             },
             0xA => self.index = nnn,
             0xB => self.pc = nnn + self.register[0] as u16,
-            0xC => unimplemented!("No random for now"),
+            0xC => {
+                let rnd: u8 = self.rng.gen();
+                self.register[x] = rnd & nn;
+            },
             0xE => match (op_3,op_4) {
                 (0x9,0xE) => if key_pressed[vx as usize] { self.pc += 2; },
                 (0xA,0x1) => if !key_pressed[vx as usize] { self.pc += 2; },
@@ -176,7 +182,7 @@ impl Cpu {
                 (0x1,0x5) => self.delay_timer.timer = vx,
                 (0x1,0x8) => self.sound_timer.timer = vx,
                 (0x2,0x9) => self.index = (vx & 0xF) as u16 * 5,
-                _ => unimplemented!("Random not yet implemented"),
+                _ => panic!("Unsupported instruction"),
             }
             0xD => {
                 let vf = self.display.draw(vx as usize, vy as usize, &self.memory[self.index as usize..(self.index + n) as usize]);
