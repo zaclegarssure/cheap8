@@ -73,12 +73,12 @@ impl Cpu {
         self.display.clear();
     }
 
-    pub fn cycle(&mut self) -> Output {
+    pub fn cycle(&mut self, key_pressed: &[bool;16]) -> Output {
         let opcode: u16 = (self.memory[self.pc as usize] as u16) << 8 | self.memory[(self.pc + 1) as usize] as u16;
         self.pc += 2;
         self.delay_timer.decrement();
         let beep = self.sound_timer.decrement();
-        self.execute(opcode);
+        self.execute(opcode, key_pressed);
 
         Output {
             screen: self.display.get(),
@@ -87,7 +87,7 @@ impl Cpu {
         }
     }
 
-    fn execute(&mut self, opcode: u16) -> () {
+    fn execute(&mut self, opcode: u16, key_pressed: &[bool;16]) -> () {
         let x = ((opcode & 0x0F00) >> 8) as usize;
         let y = ((opcode & 0x00F0) >> 4) as usize;
         let nn = (opcode & 0x00FF) as u8;
@@ -158,16 +158,25 @@ impl Cpu {
             0xB => self.pc = nnn + self.register[0] as u16,
             0xC => unimplemented!("No random for now"),
             0xE => match (op_3,op_4) {
-                (0x9,0xE) => unimplemented!("Keyboard instructions"),
-                (0xA,0x1) => unimplemented!("Keyboard instructions"),
+                (0x9,0xE) => if key_pressed[vx as usize] { self.pc += 2; },
+                (0xA,0x1) => if !key_pressed[vx as usize] { self.pc += 2; },
                 _ => panic!("Unsupported instruction"),
             }
             0xF => match (op_3, op_4) {
+                (0x0,0xA) => {
+                    for (i, key) in key_pressed.into_iter().enumerate() {
+                        if *key {
+                            self.register[x] = i as u8;
+                            return;
+                        }
+                        self.pc -= 2;
+                    }
+                }
                 (0x0,0x7) => self.register[x] = self.delay_timer.timer,
                 (0x1,0x5) => self.delay_timer.timer = vx,
                 (0x1,0x8) => self.sound_timer.timer = vx,
                 (0x2,0x9) => self.index = (vx & 0xF) as u16 * 5,
-                _ => unimplemented!("Keyboard and random not yet implemented"),
+                _ => unimplemented!("Random not yet implemented"),
             }
             0xD => {
                 let vf = self.display.draw(vx as usize, vy as usize, &self.memory[self.index as usize..(self.index + n) as usize]);
