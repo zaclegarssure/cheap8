@@ -31,6 +31,9 @@ impl DisplayDriver {
     }
 
     pub fn draw(&mut self,image: &[bool;WIDTH*HEIGHT]) -> () {
+        self.canvas.set_draw_color(Color::RGB(0, 0, 0));
+        self.canvas.clear();
+        self.canvas.set_draw_color(Color::RGB(255, 255, 255));
         for x in 0..WIDTH {
             for y in 0..HEIGHT {
                 if image[x + y*WIDTH] {

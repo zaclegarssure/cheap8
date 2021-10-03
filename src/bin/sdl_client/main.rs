@@ -22,26 +22,21 @@ pub fn main() {
     cpu.reset();
     cpu.load(&args[1]);
 
-    'running: loop {
+    while let Some(inputs) = input_driver.poll() {
 
-        if let Some(inputs) = input_driver.poll() {
-            let Output { screen, screen_update, beep } = cpu.cycle(&inputs);
-            if screen_update {
-                display_driver.draw(screen);
-            }
+        let Output { screen, screen_update, beep } = cpu.cycle(&inputs);
+        if screen_update {
+            display_driver.draw(screen);
+        }
 
-            if beep {
-                audio_driver.play();
-            } else {
-                audio_driver.stop();
-            }
-
+        if beep {
+            audio_driver.play();
         } else {
-            break 'running;
+            audio_driver.stop();
         }
 
 
-        thread::sleep(Duration::new(0, 1_000_000u32 / 60));
+        thread::sleep(Duration::from_millis(2));
     }
 
 }

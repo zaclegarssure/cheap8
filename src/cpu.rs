@@ -42,6 +42,7 @@ pub struct Cpu {
     memory: [u8;4096],
     display: Display,
     rng: ThreadRng,
+    update_screen: bool,
 }
 
 impl Cpu {
@@ -57,6 +58,7 @@ impl Cpu {
             memory: [0;4096],
             display: Display::new(),
             rng: rand::thread_rng(),
+            update_screen: false,
         }
     }
 
@@ -81,11 +83,12 @@ impl Cpu {
         self.pc += 2;
         self.delay_timer.decrement();
         let beep = self.sound_timer.decrement();
+        self.update_screen = false;
         self.execute(opcode, key_pressed);
 
         Output {
             screen: self.display.get(),
-            screen_update: true,
+            screen_update: self.update_screen,
             beep,
         }
     }
@@ -104,9 +107,13 @@ impl Cpu {
         let op_3 = (opcode & 0x00F0) >> 4;
         let op_4 = opcode & 0x000F;
 
+
         match op_1 {
             0x0 => match (op_3,op_4) {
-                (0xE,0x0) => self.display.clear(), //clear screen
+                (0xE,0x0) => {
+                    self.display.clear();
+                    self.update_screen = true;
+                } //clear screen
                 (0xE,0xE) => self.pc = self.pop(), //return
                 _ => panic!("Unsupported instruction {:#x}{:#x}{:#x}{:#x}",op_1,op_2,op_3,op_4),
             }
@@ -206,7 +213,8 @@ impl Cpu {
             0xD => {
                 let vf = self.display.draw(vx as usize, vy as usize, &self.memory[self.index as usize..(self.index + n) as usize]);
                 self.register[0xF] = vf as u8;
-            },
+                self.update_screen = true;
+            }
             _ => panic!("Unsupported instruction {:#x}{:#x}{:#x}{:#x}",op_1,op_2,op_3,op_4),
         }
     }
