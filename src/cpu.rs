@@ -2,7 +2,7 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
 
-use crate::display::Display;
+use crate::display::{Display,WIDTH,HEIGHT};
 use crate::timer::Timer;
 
 const START_PC: u16 = 0x200;
@@ -24,16 +24,22 @@ const FONT: [u8;80] =
     0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
     0xF0, 0x80, 0xF0, 0x80, 0x80];  // F
 
+pub struct Output<'a> {
+    pub screen: &'a[bool;WIDTH*HEIGHT],
+    pub screen_update: bool,
+    pub beep: bool,
+}
+
 pub struct Cpu {
-    pub register: [u8;16],
-    pub index: u16,
-    pub pc: u16,
-    pub stack: [u16;16],
-    pub sp: u8,
-    pub delay_timer: Timer,
-    pub sound_timer: Timer,
-    pub memory: [u8;4096],
-    pub display: Display,
+    register: [u8;16],
+    index: u16,
+    pc: u16,
+    stack: [u16;16],
+    sp: u8,
+    delay_timer: Timer,
+    sound_timer: Timer,
+    memory: [u8;4096],
+    display: Display,
 
 }
 
@@ -67,12 +73,18 @@ impl Cpu {
         self.display.clear();
     }
 
-    pub fn cycle(&mut self) -> () {
+    pub fn cycle(&mut self) -> Output {
         let opcode: u16 = (self.memory[self.pc as usize] as u16) << 8 | self.memory[(self.pc + 1) as usize] as u16;
         self.pc += 2;
         self.delay_timer.decrement();
-        self.sound_timer.decrement();
+        let beep = self.sound_timer.decrement();
         self.execute(opcode);
+
+        Output {
+            screen: self.display.get(),
+            screen_update: true,
+            beep,
+        }
     }
 
     fn execute(&mut self, opcode: u16) -> () {
