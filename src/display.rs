@@ -1,5 +1,5 @@
-const WIDTH: usize = 64;
-const HEIGHT: usize = 32;
+pub const WIDTH: usize = 64;
+pub const HEIGHT: usize = 32;
 
 pub struct Display {
     display: [bool;64*32],
@@ -58,6 +58,10 @@ impl Display {
 
 
         vf
+    }
+
+    pub fn get(&self) -> &[bool;WIDTH*HEIGHT] {
+        &self.display
     }
 
     pub fn debug_draw(&self) {

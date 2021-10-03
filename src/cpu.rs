@@ -1,11 +1,13 @@
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
+use rand::prelude::*;
 
-use crate::display::Display;
+use crate::display::{Display,WIDTH,HEIGHT};
+use crate::timer::Timer;
 
 const START_PC: u16 = 0x200;
-const FONT: [u8;80] = 
+const FONT: [u8;80] =
     [0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
     0x20, 0x60, 0x20, 0x20, 0x70, // 1
     0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
@@ -21,19 +23,25 @@ const FONT: [u8;80] =
     0xF0, 0x80, 0x80, 0x80, 0xF0, // C
     0xE0, 0x90, 0x90, 0x90, 0xE0, // D
     0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
-    0xF0, 0x80, 0xF0, 0x80, 0x80];  // F 
+    0xF0, 0x80, 0xF0, 0x80, 0x80];  // F
+
+pub struct Output<'a> {
+    pub screen: &'a[bool;WIDTH*HEIGHT],
+    pub screen_update: bool,
+    pub beep: bool,
+}
 
 pub struct Cpu {
-    pub register: [u8;16],
-    pub index: u16,
-    pub pc: u16,
-    pub stack: [u16;16],
-    pub sp: u8,
-    pub delay_timer: u8,
-    pub sound_timer: u8,
-    pub memory: [u8;4096],
-    pub display: Display,
-
+    register: [u8;16],
+    index: u16,
+    pc: u16,
+    stack: [u16;16],
+    sp: u8,
+    delay_timer: Timer,
+    sound_timer: Timer,
+    memory: [u8;4096],
+    display: Display,
+    rng: ThreadRng,
 }
 
 impl Cpu {
@@ -44,10 +52,11 @@ impl Cpu {
             pc: 0,
             stack: [0;16],
             sp: 0,
-            delay_timer: 0,
-            sound_timer: 0,
+            delay_timer: Timer::new(),
+            sound_timer: Timer::new(),
             memory: [0;4096],
             display: Display::new(),
+            rng: rand::thread_rng(),
         }
     }
 
@@ -57,54 +66,145 @@ impl Cpu {
         self.pc = START_PC;
         self.stack = [0;16];
         self.sp = 0;
-        self.delay_timer = 0;
-        self.sound_timer = 0;
+        self.delay_timer.reset();
+        self.sound_timer.reset();
         self.memory = [0;4096];
         for i in 0..FONT.len() {
             self.memory[i] = FONT[i];
         }
         self.display.clear();
+        self.rng = rand::thread_rng();
     }
 
-    pub fn cycle(&mut self) -> () {
+    pub fn cycle(&mut self, key_pressed: &[bool;16]) -> Output {
         let opcode: u16 = (self.memory[self.pc as usize] as u16) << 8 | self.memory[(self.pc + 1) as usize] as u16;
         self.pc += 2;
-        self.execute(opcode);
+        self.delay_timer.decrement();
+        let beep = self.sound_timer.decrement();
+        self.execute(opcode, key_pressed);
+
+        Output {
+            screen: self.display.get(),
+            screen_update: true,
+            beep,
+        }
     }
 
-    fn execute(&mut self, opcode: u16) -> () {
+    fn execute(&mut self, opcode: u16, key_pressed: &[bool;16]) -> () {
         let x = ((opcode & 0x0F00) >> 8) as usize;
         let y = ((opcode & 0x00F0) >> 4) as usize;
         let nn = (opcode & 0x00FF) as u8;
         let nnn = opcode & 0x0FFF;
         let n = opcode & 0x000F;
+        let vx = self.register[x];
+        let vy = self.register[y];
 
         let op_1 = (opcode & 0xF000) >> 12;
         let op_2 = (opcode & 0x0F00) >> 8;
         let op_3 = (opcode & 0x00F0) >> 4;
         let op_4 = opcode & 0x000F;
 
-        match (op_1,op_2,op_3,op_4) {
-            (0x0,_,_,_) => match (op_3,op_4) {
+        match op_1 {
+            0x0 => match (op_3,op_4) {
                 (0xE,0x0) => self.display.clear(), //clear screen
                 (0xE,0xE) => self.pc = self.pop(), //return
                 _ => panic!("Unsupported instruction"), //SYS
             }
-            (0x1,_,_,_) => self.pc = nnn, //jump
-            (0x2,_,_,_) => {
+            0x1 => self.pc = nnn, //jump
+            0x2 => {
                 self.push(self.pc);
                 self.pc = nnn;
             },
-            (0x3,0,0,0) => (),
-            (0x4,0,0,0) => (),
-            (0x5,0,0,0) => (),
-            (0x6,_,_,_) => self.register[x] = nn, //set register
-            (0x7,_,_,_) => self.register[x] += nn, //add to register
-            (0x8,0,0,0) => (),
-            (0xA,_,_,_) => self.index = nnn,
-            (0xD,_,_,_) => { 
-                let vf = self.display.draw(self.register[x] as usize, self.register[y] as usize, &self.memory[self.index as usize..(self.index + n) as usize]); 
-                self.register[0xF as usize] = vf as u8;
+            0x3 => if vx == nn {
+                self.pc += 2;
+            },
+            0x4 => if vx != nn {
+                self.pc += 2;
+            },
+            0x5 => if vx == vy {
+                self.pc += 2;
+            },
+            0x9 => if vx != vy {
+                self.pc += 2;
+            },
+            0x6 => self.register[x] = nn, //set register
+            0x7 => self.register[x] = vx.wrapping_add(nn), //add to register
+            0x8 => match op_4 {
+                0x0 => self.register[x] = vy,
+                0x1 => self.register[x] = vx | vy,
+                0x2 => self.register[x] = vx & vy,
+                0x3 => self.register[x] = vx ^ vy,
+                0x4 => {
+                    let (res,ovf) = vx.overflowing_add(vy);
+                    self.register[x] = res;
+                    self.register[0xF] = ovf as u8;
+                }
+                0x5 => {
+                    self.register[x] = vx.wrapping_sub(vy);
+                    self.register[0xF] = (vx >= vy) as u8;
+                }
+                0x6 => {
+                    self.register[0xF] = vx & 0x1;
+                    self.register[x] >>= 1;
+                }
+                0x7 => {
+                    self.register[x] = vy.wrapping_sub(vx);
+                    self.register[0xF] = (vy >= vx) as u8;
+                }
+                0xE => {
+                    self.register[0xF] = vx & 0x80;
+                    self.register[x] <<= 1;
+                },
+                _ => panic!("Unsupported instruction"),
+            },
+            0xA => self.index = nnn,
+            0xB => self.pc = nnn + self.register[0] as u16,
+            0xC => {
+                let rnd: u8 = self.rng.gen();
+                self.register[x] = rnd & nn;
+            },
+            0xE => match (op_3,op_4) {
+                (0x9,0xE) => if key_pressed[vx as usize] { self.pc += 2; },
+                (0xA,0x1) => if !key_pressed[vx as usize] { self.pc += 2; },
+                _ => panic!("Unsupported instruction"),
+            }
+            0xF => match (op_3, op_4) {
+                (0x0,0xA) => {
+                    for (i, key) in key_pressed.into_iter().enumerate() {
+                        if *key {
+                            self.register[x] = i as u8;
+                            return;
+                        }
+                        self.pc -= 2;
+                    }
+                }
+                (0x0,0x7) => self.register[x] = self.delay_timer.timer,
+                (0x1,0x5) => self.delay_timer.timer = vx,
+                (0x1,0x8) => self.sound_timer.timer = vx,
+                (0x2,0x9) => self.index = (vx & 0xF) as u16 * 5,
+                (0x3,0x3) => {
+                    let digit1 = vx / 100;
+                    let digit2 = (vx % 100) / 10;
+                    let digit3 = vx % 10;
+                    self.memory[self.index as usize] = digit1;
+                    self.memory[(self.index+1) as usize] = digit2;
+                    self.memory[(self.index+2) as usize] = digit3;
+                }
+                (0x5,0x5) => {
+                    for i in 0..=x {
+                        self.memory[self.index as usize + i] = self.register[i];
+                    }
+                }
+                (0x6,0x5) => {
+                    for i in 0..=x {
+                        self.register[i] = self.memory[self.index as usize + i];
+                    }
+                }
+                _ => panic!("Unsupported instruction"),
+            }
+            0xD => {
+                let vf = self.display.draw(vx as usize, vy as usize, &self.memory[self.index as usize..(self.index + n) as usize]);
+                self.register[0xF] = vf as u8;
             },
             _ => panic!("Unsupported instruction"),
         }
