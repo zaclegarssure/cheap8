@@ -9,20 +9,22 @@ pub struct InputDriver {
 impl InputDriver {
     pub fn new(sdl_context: &sdl2::Sdl) -> Self {
         let event_pump = sdl_context.event_pump().unwrap();
-        InputDriver {
-            event_pump,
-        }
+        InputDriver { event_pump }
     }
 
-    pub fn poll(&mut self) -> Option<[bool;16]> {
+    pub fn poll(&mut self) -> Option<[bool; 16]> {
         for event in self.event_pump.poll_iter() {
             match event {
-                Event::Quit{..} | Event::KeyDown {keycode: Some(Keycode::Escape), ..} => return None,
-                _ => ()
+                Event::Quit { .. }
+                | Event::KeyDown {
+                    keycode: Some(Keycode::Escape),
+                    ..
+                } => return None,
+                _ => (),
             }
         }
 
-        let mut key_pressed = [false;16];
+        let mut key_pressed = [false; 16];
 
         self.event_pump
             .keyboard_state()
@@ -30,7 +32,6 @@ impl InputDriver {
             .filter_map(Keycode::from_scancode)
             .filter_map(Self::key_code_to_hex)
             .for_each(|hex_key| key_pressed[hex_key] = true);
-
 
         Some(key_pressed)
     }

@@ -27,11 +27,11 @@ pub struct Cli {
 }
 
 impl Cli {
-    pub fn rgb_color(color: u32) -> (u8,u8,u8) {
+    pub fn rgb_color(color: u32) -> (u8, u8, u8) {
         let r = ((color & 0xFF0000) >> 16) as u8;
         let g = ((color & 0x00FF00) >> 8) as u8;
         let b = (color & 0x0000FF) as u8;
 
-        (r,g,b)
+        (r, g, b)
     }
 }

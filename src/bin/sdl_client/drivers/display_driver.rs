@@ -1,10 +1,10 @@
 use sdl2;
 use sdl2::pixels::Color;
+use sdl2::rect::Rect;
 use sdl2::render::Canvas;
 use sdl2::video::Window;
-use sdl2::rect::Rect;
 
-use cheap8::{WIDTH,HEIGHT};
+use cheap8::{HEIGHT, WIDTH};
 
 use crate::Cli;
 
@@ -18,7 +18,12 @@ pub struct DisplayDriver {
 impl DisplayDriver {
     pub fn new(sdl_context: &sdl2::Sdl, args: &Cli) -> Self {
         let video_subsystem = sdl_context.video().unwrap();
-        let window = video_subsystem.window("Cheap8", (WIDTH as u32)*args.scale_factor, (HEIGHT as u32)*args.scale_factor)
+        let window = video_subsystem
+            .window(
+                "Cheap8",
+                (WIDTH as u32) * args.scale_factor,
+                (HEIGHT as u32) * args.scale_factor,
+            )
             .position_centered()
             .build()
             .unwrap();
@@ -35,14 +40,21 @@ impl DisplayDriver {
         }
     }
 
-    pub fn draw(&mut self,image: &[bool;WIDTH*HEIGHT]) -> () {
+    pub fn draw(&mut self, image: &[bool; WIDTH * HEIGHT]) -> () {
         self.canvas.set_draw_color(self.bg_color);
         self.canvas.clear();
         self.canvas.set_draw_color(self.pixel_color);
         for x in 0..WIDTH {
             for y in 0..HEIGHT {
-                if image[x + y*WIDTH] {
-                    self.canvas.fill_rect(Rect::new(x as i32*self.scale_factor as i32,y as i32*self.scale_factor as i32,self.scale_factor,self.scale_factor)).unwrap();
+                if image[x + y * WIDTH] {
+                    self.canvas
+                        .fill_rect(Rect::new(
+                            x as i32 * self.scale_factor as i32,
+                            y as i32 * self.scale_factor as i32,
+                            self.scale_factor,
+                            self.scale_factor,
+                        ))
+                        .unwrap();
                 }
             }
         }

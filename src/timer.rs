@@ -4,11 +4,9 @@ pub struct Timer {
 
 impl Timer {
     pub fn new() -> Self {
-        Timer {
-            timer: 0,
-        }
+        Timer { timer: 0 }
     }
-    
+
     pub fn reset(&mut self) -> () {
         self.timer = 0;
     }
@@ -22,5 +20,3 @@ impl Timer {
         true
     }
 }
-
-

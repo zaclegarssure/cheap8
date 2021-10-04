@@ -1,15 +1,15 @@
-use structopt::StructOpt;
 use sdl2;
+use structopt::StructOpt;
 
-use std::time::Duration;
 use std::thread;
+use std::time::Duration;
 
 mod drivers;
+use drivers::AudioDriver;
 use drivers::DisplayDriver;
 use drivers::InputDriver;
-use drivers::AudioDriver;
 
-use cheap8::{Cpu,Output};
+use cheap8::{Cpu, Output};
 
 mod parse_args;
 use parse_args::Cli;
@@ -26,8 +26,11 @@ pub fn main() {
     cpu.load(args.path.to_str().unwrap());
 
     while let Some(inputs) = input_driver.poll() {
-
-        let Output { screen, screen_update, beep } = cpu.cycle(&inputs);
+        let Output {
+            screen,
+            screen_update,
+            beep,
+        } = cpu.cycle(&inputs);
         if screen_update {
             display_driver.draw(screen);
         }
@@ -38,8 +41,6 @@ pub fn main() {
             audio_driver.stop();
         }
 
-
         thread::sleep(Duration::from_millis(1));
     }
-
 }
