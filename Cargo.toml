@@ -9,6 +9,7 @@ edition = "2018"
 [dependencies]
 rand = "0.8.4"
 sdl2 = { version = "0.34.5" , optional = true, default-features = false, features = ["gfx"] }
+structopt = "0.3.23"
 
 [features]
 sdl = ["sdl2"]
