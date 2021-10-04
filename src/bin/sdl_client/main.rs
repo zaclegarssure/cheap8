@@ -3,7 +3,6 @@ use sdl2;
 
 use std::time::Duration;
 use std::thread;
-use std::env;
 
 mod drivers;
 use drivers::DisplayDriver;

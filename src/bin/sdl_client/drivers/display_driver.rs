@@ -5,7 +5,6 @@ use sdl2::video::Window;
 use sdl2::rect::Rect;
 
 use cheap8::{WIDTH,HEIGHT};
-pub const SCALE_FACTOR: u32 = 16;
 
 use crate::Cli;
 
