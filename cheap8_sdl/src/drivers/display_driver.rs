@@ -4,7 +4,7 @@ use sdl2::rect::Rect;
 use sdl2::render::Canvas;
 use sdl2::video::Window;
 
-use cheap8::{HEIGHT, WIDTH};
+use cheap8_core::{HEIGHT, WIDTH};
 
 use crate::parse_args::Cli;
 

@@ -1,5 +1,5 @@
 [package]
-name = "cheap8_sdl"
+name = "cheap8_core"
 version = "0.1.0"
 authors = ["Zacharie Tevaearai <zacharietevaearai@epfl.ch>"]
 edition = "2018"
@@ -8,6 +8,3 @@ edition = "2018"
 
 [dependencies]
 rand = "0.8.4"
-sdl2 = { version = "0.34.5", features = ["gfx"] }
-structopt = "0.3.23"
-cheap8_core = {path = "../cheap8_core"}

@@ -6,8 +6,9 @@ edition = "2018"
 
 [workspace]
 members = [
-    "cheap8_sdl"
+    "cheap8_sdl",
+    "cheap8_core"
 ]
 
 [dependencies]
-rand = "0.8.4"
+cheap8_core = { path = "cheap8_core" }

@@ -9,7 +9,7 @@ use drivers::AudioDriver;
 use drivers::DisplayDriver;
 use drivers::InputDriver;
 
-use cheap8::{Cpu, Output};
+use cheap8_core::{Cpu, Output};
 
 mod parse_args;
 use parse_args::Cli;
