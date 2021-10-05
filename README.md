@@ -4,8 +4,10 @@ A (yet again) chip8 emulator.
 ## About The Project
 
 I needed to get a bit more confident in Rust, and building a chip8 emulator (interpreter)
-was a great idea. It also was a way to try different cargo features, nothing serious.
+was a great idea. It also was a way to try different cargo features.
 It uses SDL or the terminal to draw images, and ideally will support wasm one day.
+It inspired by Tobias V. Langhoff's high level [tutorial](https://tobiasvl.github.io/blog/write-a-chip-8-emulator/).
+The SDL code is really similar to the [examples](https://docs.rs/sdl2/0.34.5/sdl2/) provided in the crate.
 
 ## Getting Started
 
