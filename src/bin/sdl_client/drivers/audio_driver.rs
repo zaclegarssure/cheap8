@@ -2,11 +2,14 @@ use sdl2::audio::AudioCallback;
 use sdl2::audio::AudioDevice;
 use sdl2::audio::AudioSpecDesired;
 
+/// Struct that drives audio, taken
+/// from sdl2 examples.
 pub struct AudioDriver {
     device: AudioDevice<SquareWave>,
 }
 
 impl AudioDriver {
+    /// Create new driver from [`sdl2::Sdl`].
     pub fn new(sdl_context: &sdl2::Sdl) -> Self {
         let audio_substystem = sdl_context.audio().unwrap();
 

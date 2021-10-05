@@ -8,6 +8,7 @@ use cheap8::{HEIGHT, WIDTH};
 
 use crate::Cli;
 
+/// Struct that can display chip8 screen to SDL window
 pub struct DisplayDriver {
     scale_factor: u32,
     pixel_color: Color,
@@ -16,6 +17,8 @@ pub struct DisplayDriver {
 }
 
 impl DisplayDriver {
+    /// Create new driver from [`sdl2::Sdl`]. `args` are used to
+    /// know the `scale_factor` of the window and pixels colors.
     pub fn new(sdl_context: &sdl2::Sdl, args: &Cli) -> Self {
         let video_subsystem = sdl_context.video().unwrap();
         let window = video_subsystem
@@ -40,6 +43,7 @@ impl DisplayDriver {
         }
     }
 
+    /// Draw `image` to the screen.
     pub fn draw(&mut self, image: &[bool; WIDTH * HEIGHT]) -> () {
         self.canvas.set_draw_color(self.bg_color);
         self.canvas.clear();
