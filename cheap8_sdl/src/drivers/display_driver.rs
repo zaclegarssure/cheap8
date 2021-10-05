@@ -6,7 +6,7 @@ use sdl2::video::Window;
 
 use cheap8::{HEIGHT, WIDTH};
 
-use crate::Cli;
+use crate::parse_args::Cli;
 
 /// Struct that can display chip8 screen to SDL window
 pub struct DisplayDriver {

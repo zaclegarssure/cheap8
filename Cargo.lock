@@ -49,6 +49,14 @@ name = "cheap8"
 version = "0.1.0"
 dependencies = [
  "rand",
+]
+
+[[package]]
+name = "cheap8_sdl"
+version = "0.1.0"
+dependencies = [
+ "cheap8",
+ "rand",
  "sdl2",
  "structopt",
 ]
