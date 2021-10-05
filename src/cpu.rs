@@ -45,7 +45,7 @@ pub struct Cpu {
     stack: [u16; 16],
     sp: u8,
     // Two general purpose timer.
-    // The sound one should play a sound while it is 
+    // The sound one should play a sound while it is
     // derementing.
     delay_timer: Timer,
     sound_timer: Timer,

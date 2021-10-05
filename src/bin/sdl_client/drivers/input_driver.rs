@@ -14,8 +14,8 @@ impl InputDriver {
         InputDriver { event_pump }
     }
 
-    /// Return `Some(key_pressed)` if it reads keypad inputs, 
-    /// where `true` mean pressed. 
+    /// Return `Some(key_pressed)` if it reads keypad inputs,
+    /// where `true` mean pressed.
     /// Return None if recieves `[Event::Quit]` or `[Keycode::Escape]`.
     pub fn poll(&mut self) -> Option<[bool; 16]> {
         for event in self.event_pump.poll_iter() {
