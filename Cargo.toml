@@ -4,17 +4,10 @@ version = "0.1.0"
 authors = ["Zacharie Tevaearai <zacharietevaearai@epfl.ch>"]
 edition = "2018"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[workspace]
+members = [
+    "cheap8_sdl"
+]
 
 [dependencies]
 rand = "0.8.4"
-sdl2 = { version = "0.34.5" , optional = true, default-features = false, features = ["gfx"] }
-structopt = "0.3.23"
-
-[features]
-sdl = ["sdl2"]
-
-[[bin]]
-name = "sdl_client"
-src = "src/bin/sdl_client/main.rs"
-required-features = ["sdl"]
