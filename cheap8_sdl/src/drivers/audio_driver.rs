@@ -1,3 +1,5 @@
+use std::error::Error;
+
 use sdl2::audio::AudioCallback;
 use sdl2::audio::AudioDevice;
 use sdl2::audio::AudioSpecDesired;
@@ -10,8 +12,8 @@ pub struct AudioDriver {
 
 impl AudioDriver {
     /// Create new driver from [`sdl2::Sdl`].
-    pub fn new(sdl_context: &sdl2::Sdl) -> Self {
-        let audio_substystem = sdl_context.audio().unwrap();
+    pub fn new(sdl_context: &sdl2::Sdl) -> Result<Self,Box<dyn Error>> {
+        let audio_substystem = sdl_context.audio()?;
 
         let desired_spec = AudioSpecDesired {
             freq: Some(44100),
@@ -19,15 +21,14 @@ impl AudioDriver {
             samples: None,     // default sample size
         };
 
-        AudioDriver {
+        Ok(AudioDriver {
             device: audio_substystem
                 .open_playback(None, &desired_spec, |spec| SquareWave {
                     phase_inc: 440.0 / spec.freq as f32,
                     phase: 0.0,
                     volume: 0.25,
-                })
-                .unwrap(),
-        }
+                })?,
+        })
     }
 
     pub fn play(&self) {

@@ -1,3 +1,5 @@
+use std::error::Error;
+
 use sdl2;
 use sdl2::pixels::Color;
 use sdl2::rect::Rect;
@@ -19,8 +21,8 @@ pub struct DisplayDriver {
 impl DisplayDriver {
     /// Create new driver from [`sdl2::Sdl`]. `args` are used to
     /// know the `scale_factor` of the window and pixels colors.
-    pub fn new(sdl_context: &sdl2::Sdl, args: &Cli) -> Self {
-        let video_subsystem = sdl_context.video().unwrap();
+    pub fn new(sdl_context: &sdl2::Sdl, args: &Cli) -> Result<Self,Box<dyn Error>> {
+        let video_subsystem = sdl_context.video()?;
         let window = video_subsystem
             .window(
                 "Cheap8",
@@ -28,19 +30,18 @@ impl DisplayDriver {
                 (HEIGHT as u32) * args.scale_factor,
             )
             .position_centered()
-            .build()
-            .unwrap();
+            .build()?;
 
-        let canvas = window.into_canvas().build().unwrap();
+        let canvas = window.into_canvas().build()?;
         let (pr, pg, pb) = Cli::rgb_color(args.pixel_color);
         let (br, bg, bb) = Cli::rgb_color(args.bg_color);
 
-        DisplayDriver {
+        Ok(DisplayDriver {
             scale_factor: args.scale_factor,
             pixel_color: Color::RGB(pr, pg, pb),
             bg_color: Color::RGB(br, bg, bb),
             canvas,
-        }
+        })
     }
 
     /// Draw `image` to the screen.

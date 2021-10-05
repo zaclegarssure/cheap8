@@ -1,3 +1,5 @@
+use std::error::Error;
+
 use sdl2;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
@@ -9,9 +11,9 @@ pub struct InputDriver {
 
 impl InputDriver {
     /// Create a new driver from [`sdl2::Sdl`].
-    pub fn new(sdl_context: &sdl2::Sdl) -> Self {
-        let event_pump = sdl_context.event_pump().unwrap();
-        InputDriver { event_pump }
+    pub fn new(sdl_context: &sdl2::Sdl) -> Result<Self,Box<dyn Error>> {
+        let event_pump = sdl_context.event_pump()?;
+        Ok(InputDriver { event_pump })
     }
 
     /// Return `Some(key_pressed)` if it reads keypad inputs,

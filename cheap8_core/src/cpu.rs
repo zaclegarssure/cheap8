@@ -284,12 +284,14 @@ impl Cpu {
         let path = Path::new(path);
 
         let mut file = match File::open(path) {
-            Err(_) => panic!("Lmao"),
+            Err(e) => panic!("couldn't open {}: {}", path.display(), e),
             Ok(file) => file,
         };
 
         let mut buffer = Vec::new();
-        file.read_to_end(&mut buffer);
+        if let Err(e) = file.read_to_end(&mut buffer) {
+            panic!("couldn't read the file: {}", e);
+        }
 
         for i in 0x200..self.memory.len().min(buffer.len() + 0x200) {
             self.memory[i] = buffer.get(i - 0x200).unwrap().clone();

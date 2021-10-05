@@ -17,9 +17,12 @@ use parse_args::Cli;
 pub fn main() {
     let args = Cli::from_args();
     let sdl_context = sdl2::init().unwrap();
-    let mut display_driver = DisplayDriver::new(&sdl_context, &args);
-    let mut input_driver = InputDriver::new(&sdl_context);
-    let audio_driver = AudioDriver::new(&sdl_context);
+    let mut display_driver = DisplayDriver::new(&sdl_context, &args)
+        .expect("Failed to create a display driver");
+    let mut input_driver = InputDriver::new(&sdl_context)
+        .expect("Failed to create an input driver");
+    let audio_driver = AudioDriver::new(&sdl_context)
+        .expect("Failed to create an audio driver");
 
     let mut cpu = Cpu::new();
     cpu.reset();
