@@ -2,16 +2,21 @@ use sdl2;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 
+/// Struct that deals with inputs events
 pub struct InputDriver {
     event_pump: sdl2::EventPump,
 }
 
 impl InputDriver {
+    /// Create a new driver from [`sdl2::Sdl`].
     pub fn new(sdl_context: &sdl2::Sdl) -> Self {
         let event_pump = sdl_context.event_pump().unwrap();
         InputDriver { event_pump }
     }
 
+    /// Return `Some(key_pressed)` if it reads keypad inputs,
+    /// where `true` mean pressed.
+    /// Return None if recieves `[Event::Quit]` or `[Keycode::Escape]`.
     pub fn poll(&mut self) -> Option<[bool; 16]> {
         for event in self.event_pump.poll_iter() {
             match event {
@@ -36,6 +41,7 @@ impl InputDriver {
         Some(key_pressed)
     }
 
+    // Chip8 keymap
     fn key_code_to_hex(keycode: Keycode) -> Option<usize> {
         match keycode {
             Keycode::Num1 => Some(0x1),

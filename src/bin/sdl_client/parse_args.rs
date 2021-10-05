@@ -22,6 +22,7 @@ pub struct Cli {
     #[structopt(short, long, default_value = "0x000", parse(try_from_str = parse_color))]
     pub bg_color: u32,
 
+    /// Scale of the scree, 1 corresponds to a 64x32 window
     #[structopt(short, long, default_value = "14")]
     pub scale_factor: u32,
 }

@@ -26,27 +26,38 @@ const FONT: [u8; 80] = [
     0xF0, 0x80, 0xF0, 0x80, 0x80,
 ]; // F
 
+/// Output of CPU after update, it contains everything
+/// needed to output the game on a scree.
 pub struct Output<'a> {
+    /// The array of pixels, true is on, false is off.
     pub screen: &'a [bool; WIDTH * HEIGHT],
+    /// True iff the screen should be updated.
     pub screen_update: bool,
+    /// True iff a sound should be played.
     pub beep: bool,
 }
 
+/// Cpu structs, that executes istructions.
 pub struct Cpu {
     register: [u8; 16],
     index: u16,
     pc: u16,
     stack: [u16; 16],
     sp: u8,
+    // Two general purpose timer.
+    // The sound one should play a sound while it is
+    // derementing.
     delay_timer: Timer,
     sound_timer: Timer,
     memory: [u8; 4096],
     display: Display,
     rng: ThreadRng,
+    // True iff the screen should be updated.
     update_screen: bool,
 }
 
 impl Cpu {
+    /// Create a new CPU with everything initialized to 0
     pub fn new() -> Self {
         Cpu {
             register: [0; 16],
@@ -63,6 +74,7 @@ impl Cpu {
         }
     }
 
+    /// Reset to the values the CPU should have before loading a ROM.
     pub fn reset(&mut self) -> () {
         self.register = [0; 16];
         self.index = 0;
@@ -79,6 +91,7 @@ impl Cpu {
         self.rng = rand::thread_rng();
     }
 
+    /// Execute one cycles (one instruction).
     pub fn cycle(&mut self, key_pressed: &[bool; 16]) -> Output {
         let opcode: u16 = (self.memory[self.pc as usize] as u16) << 8
             | self.memory[(self.pc + 1) as usize] as u16;
@@ -255,6 +268,7 @@ impl Cpu {
         }
     }
 
+    // Stack operations
     fn push(&mut self, value: u16) -> () {
         self.stack[self.sp as usize] = value;
         self.sp += 1;
@@ -265,6 +279,7 @@ impl Cpu {
         self.stack[self.sp as usize]
     }
 
+    /// Load the ROM located at path
     pub fn load(&mut self, path: &str) {
         let path = Path::new(path);
 

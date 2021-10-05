@@ -1,6 +1,7 @@
 pub const WIDTH: usize = 64;
 pub const HEIGHT: usize = 32;
 
+#[doc(hidden)]
 pub struct Display {
     pub display: [bool; WIDTH * HEIGHT],
 }
