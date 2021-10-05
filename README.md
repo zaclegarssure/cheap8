@@ -14,11 +14,11 @@ The SDL code is really similar to the [examples](https://docs.rs/sdl2/0.34.5/sdl
 You should download a chip8 ROM on the internet, [here](https://github.com/kripod/chip8-roms) for instance.
 Then for the SDL version:
 ```
-cargo run -p cheap8_sdl <path-to-rom>
+cargo run -p cheap8_sdl -- <path-to-rom>
 ```
 With the terminal based:
 ```
-cargo run -p cheap8_terminal <path-to-rom>
+cargo run -p cheap8_terminal -- <path-to-rom>
 ```
 ### Prerequisites
 

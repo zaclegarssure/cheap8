@@ -16,10 +16,10 @@ pub struct Cli {
     pub path: std::path::PathBuf,
 
     /// Pixels color, in RGB format
-    #[structopt(short, long, default_value = "0x00F", parse(try_from_str = parse_color))]
+    #[structopt(short, long, default_value = "0x00F0F0", parse(try_from_str = parse_color))]
     pub pixel_color: u32,
     /// Background color, in RGB format
-    #[structopt(short, long, default_value = "0x000", parse(try_from_str = parse_color))]
+    #[structopt(short, long, default_value = "0x000000", parse(try_from_str = parse_color))]
     pub bg_color: u32,
 
     /// Scale of the scree, 1 corresponds to a 64x32 window
