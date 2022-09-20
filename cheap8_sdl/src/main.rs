@@ -1,5 +1,5 @@
+use clap::Parser;
 use sdl2;
-use structopt::StructOpt;
 
 use std::thread;
 use std::time::Duration;
@@ -15,7 +15,7 @@ mod parse_args;
 use parse_args::Cli;
 
 pub fn main() {
-    let args = Cli::from_args();
+    let args = Cli::parse();
     let sdl_context = sdl2::init().unwrap();
     let mut display_driver = DisplayDriver::new(&sdl_context, &args)
         .expect("Failed to create a display driver");

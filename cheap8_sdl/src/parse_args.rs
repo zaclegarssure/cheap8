@@ -1,5 +1,4 @@
 use std::num::ParseIntError;
-use structopt::StructOpt;
 
 fn parse_color(src: &str) -> Result<u32, ParseIntError> {
     if src.starts_with("0x") {
@@ -9,7 +8,7 @@ fn parse_color(src: &str) -> Result<u32, ParseIntError> {
     }
 }
 
-#[derive(StructOpt)]
+#[derive(clap::Parser)]
 pub struct Cli {
     /// Path to the rom file
     #[structopt(parse(from_os_str))]
